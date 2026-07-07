@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>ระบบจองรถ / 用车预订系统</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F7FA;
+    --surface:#FFFFFF;
+    --ink:#16233A;
+    --muted:#5B6B82;
+    --line:#DFE5EC;
+    --navy:#1F3A5F;
+    --navy-deep:#132A45;
+    --amber:#E39B3A;
+    --amber-deep:#C77F1F;
+    --danger:#D14D4D;
+    --success:#2E9E6B;
+    --success-bg:#E7F6EE;
+    --danger-bg:#FBEAEA;
+    --radius:10px;
+    font-family:'Sarabun','Noto Sans SC',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Sarabun','Noto Sans SC',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 20px 60px;}
+
+  /* Header */
+  .topbar{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:16px;flex-wrap:wrap;margin-bottom:22px;
+    border-bottom:2px solid var(--navy);
+    padding-bottom:16px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{
+    width:44px;height:44px;border-radius:10px;background:var(--navy);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .brand-mark svg{width:24px;height:24px;}
+  .brand h1{margin:0;font-size:22px;font-weight:700;color:var(--navy-deep);}
+  .brand p{margin:2px 0 0;font-size:13px;color:var(--muted);}
+  .top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+  button{font-family:inherit;cursor:pointer;border:none;}
+  .btn{
+    padding:9px 16px;border-radius:8px;font-size:14px;font-weight:600;
+    transition:transform .08s ease, box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--navy);color:#fff;}
+  .btn-primary:hover{background:var(--navy-deep);}
+  .btn-amber{background:var(--amber);color:#3A2200;}
+  .btn-amber:hover{background:var(--amber-deep);}
+  .btn-ghost{background:transparent;color:var(--navy);border:1.5px solid var(--navy);}
+  .btn-ghost:hover{background:var(--navy);color:#fff;}
+  .btn-danger{background:var(--danger);color:#fff;padding:6px 12px;font-size:12.5px;}
+  .btn-danger:hover{background:#B93A3A;}
+  .btn-sm{padding:6px 12px;font-size:12.5px;}
+
+  .grid{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start;}
+  @media (max-width:860px){.grid{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;
+  }
+  .card h2{margin:0 0 4px;font-size:16px;color:var(--navy-deep);}
+  .card .card-sub{margin:0 0 16px;font-size:12.5px;color:var(--muted);}
+
+  label{display:block;font-size:13px;font-weight:600;color:var(--navy-deep);margin-bottom:5px;}
+  .field{margin-bottom:14px;}
+  input[type=text], input[type=date], input[type=time], select, textarea{
+    width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:7px;
+    font-size:14px;font-family:inherit;color:var(--ink);background:#fff;
+  }
+  input:focus, select:focus, textarea:focus{
+    outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,58,95,0.12);
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  .msg{
+    padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;
+    display:none;line-height:1.5;
+  }
+  .msg.show{display:block;}
+  .msg.err{background:var(--danger-bg);color:#8A2E2E;border:1px solid #F0C4C4;}
+  .msg.ok{background:var(--success-bg);color:#1F6B49;border:1px solid #BEE5D2;}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{
+    text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--line);
+  }
+  td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .plate-chip{
+    display:inline-block;background:var(--navy);color:#fff;padding:3px 9px;
+    border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:600;
+  }
+  .time-chip{font-family:'JetBrains Mono',monospace;color:var(--navy-deep);font-weight:600;}
+  .empty-row td{text-align:center;color:var(--muted);padding:22px 10px;font-size:13.5px;}
+
+  /* timeline */
+  .timeline-block{margin-top:18px;}
+  .car-timeline{margin-bottom:16px;}
+  .car-timeline-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .car-timeline-head .plate-chip{font-size:12px;}
+  .car-timeline-head .note{font-size:12px;color:var(--muted);}
+  .track{
+    position:relative;height:34px;background:#EEF1F5;border-radius:7px;overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .track .seg{
+    position:absolute;top:0;bottom:0;background:var(--amber);
+    border-right:2px solid #fff;display:flex;align-items:center;padding:0 8px;
+    font-size:11px;color:#3A2200;font-weight:600;white-space:nowrap;overflow:hidden;
+  }
+  .track .hour-mark{
+    position:absolute;top:0;bottom:0;border-left:1px dashed #D3D9E0;
+  }
+  .track-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+
+  .admin-panel{margin-top:24px;border:2px solid var(--amber);}
+  .admin-badge{
+    display:inline-flex;align-items:center;gap:6px;background:var(--success-bg);color:#1F6B49;
+    padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;
+  }
+  .admin-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--success);}
+  .divider{height:1px;background:var(--line);margin:20px 0;}
+  .car-list-item{
+    display:flex;justify-content:space-between;align-items:center;padding:8px 0;
+    border-bottom:1px solid var(--line);font-size:13.5px;
+  }
+  .car-list-item:last-child{border-bottom:none;}
+
+  /* modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(19,42,69,0.5);display:none;
+    align-items:center;justify-content:center;z-index:50;padding:16px;
+  }
+  .overlay.show{display:flex;}
+  .modal{background:#fff;border-radius:12px;padding:24px;width:100%;max-width:340px;}
+  .modal h3{margin:0 0 4px;font-size:16px;color:var(--navy-deep);}
+  .modal p{margin:0 0 16px;font-size:12.5px;color:var(--muted);}
+  .modal-actions{display:flex;gap:8px;margin-top:16px;}
+  .modal-actions .btn{flex:1;}
+
+  .footnote{font-size:11.5px;color:var(--muted);margin-top:22px;text-align:center;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 16V9.5C4 8.7 4.5 8 5.3 7.8L6.5 7.4L7.6 4.9C7.9 4.2 8.6 3.7 9.4 3.7H14.6C15.4 3.7 16.1 4.2 16.4 4.9L17.5 7.4L18.7 7.8C19.5 8 20 8.7 20 9.5V16" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="14.5" width="18" height="5" rx="1.4" stroke="#fff" stroke-width="1.6"/><circle cx="7.2" cy="19.5" r="1.5" fill="#fff"/><circle cx="16.8" cy="19.5" r="1.5" fill="#fff"/></svg>
+      </div>
+      <div>
+        <h1 id="t-appTitle">ระบบจองรถ</h1>
+        <p id="t-subtitle">ตรวจสอบคิว จองไว ไม่จองซ้อน</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-ghost btn-sm" id="btnLang">中文</button>
+      <span id="adminBadgeWrap" style="display:none;"><span class="admin-badge"><span class="dot"></span><span id="t-loggedInAs">เข้าสู่ระบบแอดมินแล้ว</span></span></span>
+      <button class="btn btn-amber btn-sm" id="btnAdminToggle">เข้าสู่ระบบแอดมิน</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Booking form -->
+    <div class="card">
+      <h2 id="t-bookingFormTitle">จองรถ</h2>
+      <p class="card-sub" id="t-bookingFormSub">กรอกข้อมูลผู้ขอใช้และคนขับให้ครบถ้วน</p>
+
+      <div class="msg" id="bookMsg"></div>
+
+      <form id="bookingForm">
+        <div class="field">
+          <label id="t-requester">ผู้ขอใช้รถ</label>
+          <input type="text" id="inpRequester" autocomplete="off">
+        </div>
+        <div class="field">
+          <label id="t-driver">คนขับ</label>
+          <select id="inpDriver"></select>
+        </div>
+        <div class="field">
+          <label id="t-car">ทะเบียนรถ</label>
+          <select id="inpCar"></select>
+        </div>
+        <div class="field">
+          <label id="t-date">วันที่ใช้รถ</label>
+          <input type="date" id="inpDate">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label id="t-startTime">เวลาเริ่ม</label>
+            <input type="time" id="inpStart">
+          </div>
+          <div class="field">
+            <label id="t-endTime">เวลาสิ้นสุด</label>
+            <input type="time" id="inpEnd">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;" id="t-submitBooking">ยืนยันการจอง</button>
+      </form>
+    </div>
+
+    <!-- Bookings + timeline -->
+    <div>
+      <div class="card">
+        <h2 id="t-todayBookingsTitle">ตารางจองล่วงหน้า 3 วัน</h2>
+        <p class="card-sub" id="t-todayBookingsSub"></p>
+        <div id="dayTabs" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;"></div>
+        <table>
+          <thead>
+            <tr>
+              <th id="t-colRequester">ผู้ขอใช้</th>
+              <th id="t-colDriver">คนขับ</th>
+              <th id="t-colCar">ทะเบียน</th>
+              <th id="t-colTime">เวลา</th>
+              <th id="t-colAction" style="display:none;">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="bookingsTbody"></tbody>
+        </table>
+
+        <div class="timeline-block">
+          <h2 style="font-size:14px;" id="t-timelineTitle">ไทม์ไลน์การใช้รถวันนี้</h2>
+          <div id="timelineWrap"></div>
+        </div>
+      </div>
+
+      <!-- Admin panel -->
+      <div class="card admin-panel" id="adminPanel" style="display:none;">
+        <h2 id="t-adminPanelTitle">แผงควบคุมแอดมิน</h2>
+        <p class="card-sub" id="t-adminOnlyNote">ส่วนนี้แสดงเฉพาะแอดมินเท่านั้น</p>
+
+        <div class="msg" id="adminMsg"></div>
+
+        <h3 style="font-size:14px;margin:0 0 10px;" id="t-addCarTitle">เพิ่มรถเข้าระบบ</h3>
+        <form id="addCarForm" class="row2" style="margin-bottom:6px;">
+          <div class="field">
+            <label id="t-plateLabel">ทะเบียนรถ</label>
+            <input type="text" id="inpPlate" autocomplete="off">
+          </div>
+          <div class="field">
+            <label id="t-noteLabel">หมายเหตุ</label>
+            <input type="text" id="inpCarNote" autocomplete="off">
+          </div>
+          <button type="submit" class="btn btn-amber" style="grid-column:1/3;" id="t-addCarBtn">เพิ่มรถ</button>
+        </form>
+
+        <div class="divider"></div>
+        <h3 style="font-size:14px;margin:0 0 8px;" id="t-carListTitle">รายการรถทั้งหมด</h3>
+        <div id="carListWrap"></div>
+
+        <div class="divider"></div>
+        <h3 style="font-size:14px;margin:0 0 10px;" id="t-addDriverTitle">เพิ่มคนขับเข้าระบบ</h3>
+        <form id="addDriverForm" class="row2" style="margin-bottom:6px;">
+          <div class="field">
+            <label id="t-driverNameLabel">ชื่อคนขับ</label>
+            <input type="text" id="inpDriverName" autocomplete="off">
+          </div>
+          <div class="field">
+            <label id="t-driverNoteLabel">หมายเหตุ</label>
+            <input type="text" id="inpDriverNote" autocomplete="off">
+          </div>
+          <button type="submit" class="btn btn-amber" style="grid-column:1/3;" id="t-addDriverBtn">เพิ่มคนขับ</button>
+        </form>
+
+        <div class="divider"></div>
+        <h3 style="font-size:14px;margin:0 0 8px;" id="t-driverListTitle">รายชื่อคนขับทั้งหมด</h3>
+        <div id="driverListWrap"></div>
+
+        <div class="divider"></div>
+        <h3 style="font-size:14px;margin:0 0 4px;" id="t-endDayTitle">ปิดรอบวันนี้</h3>
+        <p class="card-sub" id="t-endDayDesc" style="margin-bottom:10px;"></p>
+        <button class="btn btn-primary btn-sm" id="btnEndDay" style="margin-bottom:20px;">ปิดรอบและเก็บประวัติ</button>
+
+        <div class="divider"></div>
+        <h3 style="font-size:14px;margin:0 0 8px;" id="t-historyTitle">ประวัติการจองย้อนหลัง</h3>
+        <div class="field" style="max-width:220px;">
+          <label id="t-historyPick">เลือกวันที่ต้องการดูประวัติ</label>
+          <input type="date" id="inpHistoryDate">
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th id="t-colRequester2">ผู้ขอใช้</th>
+              <th id="t-colDriver2">คนขับ</th>
+              <th id="t-colCar2">ทะเบียน</th>
+              <th id="t-colTime2">เวลา</th>
+            </tr>
+          </thead>
+          <tbody id="historyTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <p class="footnote" id="footnote"></p>
+</div>
+
+<!-- Admin login modal -->
+<div class="overlay" id="loginOverlay">
+  <div class="modal">
+    <h3 id="t-passwordPrompt">กรอกรหัสผ่านแอดมิน</h3>
+    <p id="t-passwordHint"></p>
+    <input type="text" id="inpPassword" placeholder="รหัสผ่าน" style="margin-bottom:8px;">
+    <div class="msg err" id="loginErr"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnCancelLogin">✕</button>
+      <button class="btn btn-primary" id="btnDoLogin">เข้าสู่ระบบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm cancel modal -->
+<div class="overlay" id="cancelOverlay">
+  <div class="modal">
+    <h3 id="t-confirmCancelTitle">ยืนยันยกเลิกการจอง</h3>
+    <p id="t-confirmCancelBody"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnNoCancel">✕</button>
+      <button class="btn btn-danger" id="btnYesCancel" style="flex:1;">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Admin password is verified by the server (see /api/admin/login) — never trust the client alone.
+
+  const I18N = {
+    th: {
+      appTitle:"ระบบจองรถ", subtitle:"ตรวจสอบคิว จองไว ไม่จองซ้อน", langToggle:"中文",
+      adminLogin:"เข้าสู่ระบบแอดมิน", adminLogout:"ออกจากระบบแอดมิน", loggedInAs:"เข้าสู่ระบบแอดมินแล้ว",
+      bookingFormTitle:"จองรถ", bookingFormSub:"กรอกข้อมูลผู้ขอใช้และคนขับให้ครบถ้วน",
+      requester:"ผู้ขอใช้รถ", driver:"คนขับ", car:"ทะเบียนรถ", date:"วันที่ใช้รถ",
+      startTime:"เวลาเริ่ม", endTime:"เวลาสิ้นสุด", submitBooking:"ยืนยันการจอง",
+      selectCarOpt:"-- เลือกทะเบียนรถ --", noCarsOpt:"ยังไม่มีรถในระบบ",
+      selectDriverOpt:"-- เลือกคนขับ --", noDriversOpt:"ยังไม่มีคนขับในระบบ",
+      todayBookingsTitle:"ตารางจองล่วงหน้า 3 วัน", todayBookingsSub: d=>`แสดงข้อมูลของวันที่ ${d} — ทุกคนเห็นข้อมูลชุดเดียวกัน`,
+      dayLabelToday:"วันนี้", dayLabelTomorrow:"พรุ่งนี้", dayLabelDayAfter:"มะรืนนี้",
+      colRequester:"ผู้ขอใช้", colDriver:"คนขับ", colCar:"ทะเบียน", colTime:"เวลา", colAction:"จัดการ",
+      noBookingsToday:"ยังไม่มีการจองในวันที่นี้", cancelBtn:"ยกเลิก",
+      timelineTitle:"ไทม์ไลน์การใช้รถ", noCarsTimeline:"ยังไม่มีรถในระบบให้แสดงไทม์ไลน์",
+      adminPanelTitle:"แผงควบคุมแอดมิน", adminOnlyNote:"ส่วนนี้แสดงเฉพาะแอดมินเท่านั้น ผู้ใช้ทั่วไปจะไม่เห็นส่วนนี้",
+      addCarTitle:"เพิ่มรถเข้าระบบ", plateLabel:"ทะเบียนรถ", noteLabel:"หมายเหตุ (รุ่นรถ/สี ฯลฯ)", addCarBtn:"เพิ่มรถ",
+      carListTitle:"รายการรถทั้งหมด", removeCar:"ลบรถ", noCarsAdmin:"ยังไม่ได้เพิ่มรถเข้าระบบ",
+      addDriverTitle:"เพิ่มคนขับเข้าระบบ", driverNameLabel:"ชื่อคนขับ", driverNoteLabel:"หมายเหตุ (เบอร์โทร ฯลฯ)", addDriverBtn:"เพิ่มคนขับ",
+      driverListTitle:"รายชื่อคนขับทั้งหมด", removeDriver:"ลบคนขับ", noDriversAdmin:"ยังไม่ได้เพิ่มคนขับเข้าระบบ",
+      errDriverNameRequired:"กรุณากรอกชื่อคนขับ", errDriverDuplicate:"ชื่อคนขับนี้มีอยู่ในระบบแล้ว",
+      successDriverAdded:"เพิ่มคนขับเข้าระบบสำเร็จ", successDriverRemoved:"ลบคนขับออกจากระบบแล้ว",
+      confirmRemoveDriver: name=>`ต้องการลบคนขับ "${name}" ออกจากระบบใช่หรือไม่?`,
+      endDayTitle:"ปิดรอบวันนี้", endDayDesc:"ย้ายรายการจองของวันนี้เข้าประวัติ แล้วล้างตารางจองวันนี้ให้ว่างสำหรับวันถัดไป",
+      endDayBtn:"ปิดรอบและเก็บประวัติ",
+      historyTitle:"ประวัติการจองย้อนหลัง (แอดมินเท่านั้น)", historyPick:"เลือกวันที่ต้องการดูประวัติ",
+      noHistory:"ไม่พบข้อมูลประวัติของวันที่นี้",
+      passwordPrompt:"กรอกรหัสผ่านแอดมิน", passwordHint:"ใช้สำหรับเพิ่ม/ลบรถและยกเลิกการจองเท่านั้น",
+      passwordPlaceholder:"รหัสผ่าน", loginBtn:"เข้าสู่ระบบ", wrongPassword:"รหัสผ่านไม่ถูกต้อง",
+      confirmCancelTitle:"ยืนยันยกเลิกการจอง",
+      confirmCancelBody:(r,pl,s,e)=>`ต้องการยกเลิกการจองของ "${r}" ทะเบียน ${pl} เวลา ${s}-${e} ใช่หรือไม่?`,
+      cancelYes:"ยกเลิกการจอง", cancelNo:"ปิด",
+      errRequesterRequired:"กรุณากรอกชื่อผู้ขอใช้รถ", errDriverRequired:"กรุณากรอกชื่อคนขับ",
+      errCarRequired:"กรุณาเลือกทะเบียนรถ", errDateRequired:"กรุณาเลือกวันที่", errTimeRequired:"กรุณากรอกเวลาเริ่มและสิ้นสุด",
+      errTimeInvalid:"เวลาสิ้นสุดต้องมากกว่าเวลาเริ่ม",
+      errCarConflict:(pl,name,s,e)=>`ไม่สามารถจองได้ ทะเบียน ${pl} ถูกจองแล้วโดยคนขับ "${name}" ช่วงเวลา ${s}-${e} กรุณาเลือกเวลาอื่น หรือรอให้ถึงเวลาว่าง`,
+      errDriverConflict:(name,pl,s,e)=>`ไม่สามารถจองได้ คนขับ "${name}" มีการจองซ้อนทับอยู่แล้ว (ทะเบียน ${pl} เวลา ${s}-${e}) คนขับหนึ่งคนไม่สามารถขับสองคันพร้อมกันได้`,
+      errPlateRequired:"กรุณากรอกทะเบียนรถ", errPlateDuplicate:"ทะเบียนรถนี้มีอยู่ในระบบแล้ว",
+      errNetwork:"เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง",
+      successBooked:"จองรถสำเร็จ!", successCarAdded:"เพิ่มรถเข้าระบบสำเร็จ", successCarRemoved:"ลบรถออกจากระบบแล้ว",
+      successCancelled:"ยกเลิกการจองแล้ว", successEndDay:"ปิดรอบสำเร็จ ข้อมูลถูกเก็บเข้าประวัติแล้ว",
+      confirmRemoveCar:pl=>`ต้องการลบทะเบียน ${pl} ออกจากระบบใช่หรือไม่?`,
+      footnote:"ข้อมูลการจองและรายชื่อรถเป็นข้อมูลกลาง ผู้ใช้งานทุกคนที่เปิดหน้านี้จะเห็นข้อมูลชุดเดียวกัน",
+      loading:"กำลังโหลดข้อมูล...",
+    },
+    zh: {
+      appTitle:"用车预订系统", subtitle:"查看排期，快速预订，绝不冲突", langToggle:"ไทย",
+      adminLogin:"管理员登录", adminLogout:"退出管理员", loggedInAs:"已登录管理员",
+      bookingFormTitle:"预订车辆", bookingFormSub:"请完整填写申请人与司机信息",
+      requester:"申请人", driver:"司机", car:"车牌号", date:"用车日期",
+      startTime:"开始时间", endTime:"结束时间", submitBooking:"确认预订",
+      selectCarOpt:"-- 请选择车牌 --", noCarsOpt:"系统中暂无车辆",
+      selectDriverOpt:"-- 请选择司机 --", noDriversOpt:"系统中暂无司机",
+      todayBookingsTitle:"未来3天预订一览", todayBookingsSub: d=>`显示 ${d} 的预订 — 所有人可见相同信息`,
+      dayLabelToday:"今天", dayLabelTomorrow:"明天", dayLabelDayAfter:"后天",
+      colRequester:"申请人", colDriver:"司机", colCar:"车牌", colTime:"时间", colAction:"操作",
+      noBookingsToday:"该日期暂无预订", cancelBtn:"取消",
+      timelineTitle:"用车时间轴", noCarsTimeline:"系统中暂无车辆可显示时间轴",
+      adminPanelTitle:"管理员控制台", adminOnlyNote:"此区域仅管理员可见，普通用户无法看到",
+      addCarTitle:"添加车辆", plateLabel:"车牌号", noteLabel:"备注（车型/颜色等）", addCarBtn:"添加车辆",
+      carListTitle:"车辆列表", removeCar:"移除", noCarsAdmin:"尚未添加任何车辆",
+      addDriverTitle:"添加司机", driverNameLabel:"司机姓名", driverNoteLabel:"备注（电话等）", addDriverBtn:"添加司机",
+      driverListTitle:"司机列表", removeDriver:"移除", noDriversAdmin:"尚未添加任何司机",
+      errDriverNameRequired:"请填写司机姓名", errDriverDuplicate:"该司机姓名已存在于系统中",
+      successDriverAdded:"司机添加成功", successDriverRemoved:"司机已移除",
+      confirmRemoveDriver: name=>`确定要将司机 "${name}" 从系统中移除吗？`,
+      endDayTitle:"结束今日", endDayDesc:"将今日预订归档保存，并清空今日列表以便明天使用",
+      endDayBtn:"结束并归档",
+      historyTitle:"历史记录（仅管理员可见）", historyPick:"选择要查看的日期",
+      noHistory:"未找到该日期的历史记录",
+      passwordPrompt:"请输入管理员密码", passwordHint:"仅用于添加/删除车辆及取消预订",
+      passwordPlaceholder:"密码", loginBtn:"登录", wrongPassword:"密码错误",
+      confirmCancelTitle:"确认取消预订",
+      confirmCancelBody:(r,pl,s,e)=>`确定要取消 "${r}" 的预订吗？车牌 ${pl}，时间 ${s}-${e}`,
+      cancelYes:"取消预订", cancelNo:"关闭",
+      errRequesterRequired:"请填写申请人姓名", errDriverRequired:"请填写司机姓名",
+      errCarRequired:"请选择车牌", errDateRequired:"请选择日期", errTimeRequired:"请填写开始和结束时间",
+      errTimeInvalid:"结束时间必须晚于开始时间",
+      errCarConflict:(pl,name,s,e)=>`无法预订：车牌 ${pl} 已被司机 "${name}" 预订，时间为 ${s}-${e}，请选择其他时间`,
+      errDriverConflict:(name,pl,s,e)=>`无法预订：司机 "${name}" 在该时间段已有预订（车牌 ${pl}，时间 ${s}-${e}），一名司机无法同时驾驶两辆车`,
+      errPlateRequired:"请填写车牌号", errPlateDuplicate:"该车牌已存在于系统中",
+      errNetwork:"连接服务器时出错，请重试",
+      successBooked:"预订成功！", successCarAdded:"车辆添加成功", successCarRemoved:"车辆已移除",
+      successCancelled:"预订已取消", successEndDay:"归档成功，数据已保存至历史记录",
+      confirmRemoveCar:pl=>`确定要将车牌 ${pl} 从系统中移除吗？`,
+      footnote:"预订与车辆列表为共享数据，所有打开此页面的用户都会看到相同的信息",
+      loading:"数据加载中...",
+    }
+  };
+
+  let lang = 'th';
+  let isAdmin = false;
+  let adminPassword = null; // held in memory only for this session; sent with each admin request
+  let cars = [];       // {plate, note}
+  let drivers = [];    // {name, note}
+  let bookings = [];   // {id, requester, driver, plate, date, start, end, archived}
+  let pendingCancelId = null;
+  let viewDate = null; // currently selected day in the 3-day view, set in init()
+  let serverToday = null; // authoritative "today" (Asia/Bangkok) from the server
+
+  const $ = id => document.getElementById(id);
+  const todayStr = () => {
+    if (serverToday) return serverToday;
+    // fallback before first server response arrives
+    const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year:'numeric', month:'2-digit', day:'2-digit' });
+    return fmt.format(new Date());
+  };
+  const addDaysStr = (base, n) => {
+    const d = new Date(base+'T00:00:00');
+    d.setDate(d.getDate()+n);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  };
+  const get3Days = () => { const t0 = todayStr(); return [t0, addDaysStr(t0,1), addDaysStr(t0,2)]; };
+  const formatDayLabel = (dateStr) => {
+    const d = new Date(dateStr+'T00:00:00');
+    return d.toLocaleDateString(lang==='th' ? 'th-TH' : 'zh-CN', {day:'numeric', month:'short'});
+  };
+
+  async function api(path, opts){
+    const res = await fetch(path, opts);
+    let body = null;
+    try { body = await res.json(); } catch(e){ body = null; }
+    return { ok: res.ok, status: res.status, body };
+  }
+
+  function t(key){ return I18N[lang][key]; }
+
+  function applyStaticText(){
+    document.title = lang==='th' ? "ระบบจองรถ" : "用车预订系统";
+    document.documentElement.lang = lang==='th' ? 'th' : 'zh';
+    const map = {
+      'appTitle':'appTitle','subtitle':'subtitle','loggedInAs':'loggedInAs',
+      'bookingFormTitle':'bookingFormTitle','bookingFormSub':'bookingFormSub',
+      'requester':'requester','driver':'driver','car':'car','date':'date',
+      'startTime':'startTime','endTime':'endTime','submitBooking':'submitBooking',
+      'todayBookingsTitle':'todayBookingsTitle',
+      'colRequester':'colRequester','colDriver':'colDriver','colCar':'colCar','colTime':'colTime','colAction':'colAction',
+      'colRequester2':'colRequester','colDriver2':'colDriver','colCar2':'colCar','colTime2':'colTime',
+      'timelineTitle':'timelineTitle','adminPanelTitle':'adminPanelTitle','adminOnlyNote':'adminOnlyNote',
+      'addCarTitle':'addCarTitle','plateLabel':'plateLabel','noteLabel':'noteLabel','addCarBtn':'addCarBtn',
+      'carListTitle':'carListTitle','endDayTitle':'endDayTitle','historyTitle':'historyTitle','historyPick':'historyPick',
+      'addDriverTitle':'addDriverTitle','driverNameLabel':'driverNameLabel','driverNoteLabel':'driverNoteLabel','addDriverBtn':'addDriverBtn',
+      'driverListTitle':'driverListTitle',
+      'passwordPrompt':'passwordPrompt','passwordHint':'passwordHint',
+      'confirmCancelTitle':'confirmCancelTitle',
+    };
+    Object.entries(map).forEach(([id,key])=>{ const el=$('t-'+id); if(el) el.textContent = t(key); });
+    $('btnLang').textContent = t('langToggle');
+    $('btnAdminToggle').textContent = isAdmin ? t('adminLogout') : t('adminLogin');
+    $('inpRequester').placeholder = lang==='th' ? 'เช่น นายสมชาย' : '例如：王先生';
+    $('inpPlate').placeholder = lang==='th' ? 'เช่น กข-1234' : '例如：京A12345';
+    $('inpCarNote').placeholder = lang==='th' ? 'เช่น โตโยต้า สีขาว' : '例如：丰田 白色';
+    $('inpDriverName').placeholder = lang==='th' ? 'เช่น นายบี' : '例如：李师傅';
+    $('inpDriverNote').placeholder = lang==='th' ? 'เช่น 08x-xxx-xxxx' : '例如：手机号';
+    $('inpPassword').placeholder = t('passwordPlaceholder');
+    $('btnDoLogin').textContent = t('loginBtn');
+    $('btnYesCancel').textContent = t('cancelYes');
+    $('btnNoCancel').textContent = '✕';
+    $('t-endDayDesc').textContent = t('endDayDesc');
+    $('btnEndDay').textContent = t('endDayBtn');
+    $('footnote').textContent = t('footnote');
+    if(!viewDate) viewDate = todayStr();
+    populateCarSelect();
+    populateDriverSelect();
+    renderCarList();
+    renderDriverList();
+    renderDayTabs();
+    updateSubtitle();
+    renderBookings();
+    renderTimeline();
+    renderHistory();
+  }
+
+  function updateSubtitle(){
+    $('t-todayBookingsSub').textContent = t('todayBookingsSub')(formatDayLabel(viewDate));
+  }
+
+  function renderDayTabs(){
+    const days = get3Days();
+    const labels = [t('dayLabelToday'), t('dayLabelTomorrow'), t('dayLabelDayAfter')];
+    $('dayTabs').innerHTML = days.map((d,i)=>{
+      const active = d===viewDate;
+      return `<button type="button" class="btn btn-sm ${active?'btn-primary':'btn-ghost'}" data-day="${d}">${formatDayLabel(d)} <span style="opacity:.75;">(${labels[i]})</span></button>`;
+    }).join('');
+    $('dayTabs').querySelectorAll('[data-day]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        viewDate = btn.getAttribute('data-day');
+        $('inpDate').value = viewDate;
+        renderDayTabs();
+        updateSubtitle();
+        renderBookings();
+        renderTimeline();
+      });
+    });
+  }
+
+  function showMsg(elId, text, type){
+    const el = $(elId);
+    el.textContent = text;
+    el.className = 'msg show ' + (type==='err'?'err':'ok');
+    clearTimeout(el._t);
+    el._t = setTimeout(()=>{ el.className='msg'; }, 5000);
+  }
+
+  // ---------- server sync ----------
+  async function loadAll(){
+    try{
+      const { ok, body } = await api('/api/state');
+      if(ok && body){
+        cars = body.cars || [];
+        drivers = body.drivers || [];
+        bookings = body.bookings || [];
+        serverToday = body.today || serverToday;
+      }
+    }catch(e){
+      console.error('loadAll failed', e);
+    }
+  }
+
+  // ---------- rendering ----------
+  function populateCarSelect(){
+    const sel = $('inpCar');
+    const prev = sel.value;
+    sel.innerHTML = '';
+    const optSel = document.createElement('option');
+    optSel.value=''; optSel.textContent = cars.length ? t('selectCarOpt') : t('noCarsOpt');
+    sel.appendChild(optSel);
+    cars.forEach(c=>{
+      const o = document.createElement('option');
+      o.value = c.plate;
+      o.textContent = c.plate + (c.note ? ' — '+c.note : '');
+      sel.appendChild(o);
+    });
+    if(cars.some(c=>c.plate===prev)) sel.value = prev;
+  }
+
+  function renderCarList(){
+    const wrap = $('carListWrap');
+    if(!cars.length){
+      wrap.innerHTML = `<p style="font-size:13px;color:var(--muted);">${t('noCarsAdmin')}</p>`;
+      return;
+    }
+    wrap.innerHTML = cars.map(c=>`
+      <div class="car-list-item">
+        <span><span class="plate-chip">${escapeHtml(c.plate)}</span> ${c.note? ' &nbsp;'+escapeHtml(c.note):''}</span>
+        <button class="btn btn-danger btn-sm" data-remove-plate="${escapeHtml(c.plate)}">${t('removeCar')}</button>
+      </div>
+    `).join('');
+    wrap.querySelectorAll('[data-remove-plate]').forEach(btn=>{
+      btn.addEventListener('click', onRemoveCar);
+    });
+  }
+
+  function populateDriverSelect(){
+    const sel = $('inpDriver');
+    const prev = sel.value;
+    sel.innerHTML = '';
+    const optSel = document.createElement('option');
+    optSel.value=''; optSel.textContent = drivers.length ? t('selectDriverOpt') : t('noDriversOpt');
+    sel.appendChild(optSel);
+    drivers.forEach(d=>{
+      const o = document.createElement('option');
+      o.value = d.name;
+      o.textContent = d.name + (d.note ? ' — '+d.note : '');
+      sel.appendChild(o);
+    });
+    if(drivers.some(d=>d.name===prev)) sel.value = prev;
+  }
+
+  function renderDriverList(){
+    const wrap = $('driverListWrap');
+    if(!drivers.length){
+      wrap.innerHTML = `<p style="font-size:13px;color:var(--muted);">${t('noDriversAdmin')}</p>`;
+      return;
+    }
+    wrap.innerHTML = drivers.map(d=>`
+      <div class="car-list-item">
+        <span>${escapeHtml(d.name)} ${d.note? ' &nbsp;<span style="color:var(--muted);">'+escapeHtml(d.note)+'</span>':''}</span>
+        <button class="btn btn-danger btn-sm" data-remove-driver="${escapeHtml(d.name)}">${t('removeDriver')}</button>
+      </div>
+    `).join('');
+    wrap.querySelectorAll('[data-remove-driver]').forEach(btn=>{
+      btn.addEventListener('click', onRemoveDriver);
+    });
+  }
+
+  function activeBookingsForDate(date){
+    return bookings.filter(b=>b.date===date && !b.archived).sort((a,b)=>a.start.localeCompare(b.start));
+  }
+
+  function renderBookings(){
+    const tbody = $('bookingsTbody');
+    const list = activeBookingsForDate(viewDate);
+    $('t-colAction').style.display = isAdmin ? '' : 'none';
+    if(!list.length){
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="${isAdmin?5:4}">${t('noBookingsToday')}</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(b=>`
+      <tr>
+        <td>${escapeHtml(b.requester)}</td>
+        <td>${escapeHtml(b.driver)}</td>
+        <td><span class="plate-chip">${escapeHtml(b.plate)}</span></td>
+        <td class="time-chip">${b.start}–${b.end}</td>
+        ${isAdmin ? `<td><button class="btn btn-danger" data-cancel-id="${b.id}">${t('cancelBtn')}</button></td>` : ''}
+      </tr>
+    `).join('');
+    if(isAdmin){
+      tbody.querySelectorAll('[data-cancel-id]').forEach(btn=>{
+        btn.addEventListener('click', ()=>openCancelModal(btn.getAttribute('data-cancel-id')));
+      });
+    }
+  }
+
+  function renderTimeline(){
+    const wrap = $('timelineWrap');
+    if(!cars.length){
+      wrap.innerHTML = `<p style="font-size:13px;color:var(--muted);">${t('noCarsTimeline')}</p>`;
+      return;
+    }
+    const list = activeBookingsForDate(viewDate);
+    const DAY_START = 6, DAY_END = 22; // display window 06:00-22:00
+    const span = DAY_END - DAY_START;
+    function toPct(hm){
+      const [h,m] = hm.split(':').map(Number);
+      let val = h + m/60;
+      val = Math.max(DAY_START, Math.min(DAY_END, val));
+      return ((val - DAY_START)/span)*100;
+    }
+    wrap.innerHTML = cars.map(c=>{
+      const segs = list.filter(b=>b.plate===c.plate).map(b=>{
+        const left = toPct(b.start), right = toPct(b.end);
+        const width = Math.max(right-left, 1.5);
+        return `<div class="seg" style="left:${left}%;width:${width}%;" title="${escapeHtml(b.driver)} ${b.start}-${b.end}">${escapeHtml(b.driver)} ${b.start}-${b.end}</div>`;
+      }).join('');
+      const hourMarks = [];
+      for(let h=DAY_START+1; h<DAY_END; h++){
+        const pct = ((h-DAY_START)/span)*100;
+        hourMarks.push(`<div class="hour-mark" style="left:${pct}%;"></div>`);
+      }
+      return `
+        <div class="car-timeline">
+          <div class="car-timeline-head">
+            <span class="plate-chip">${escapeHtml(c.plate)}</span>
+            <span class="note">${c.note?escapeHtml(c.note):''}</span>
+          </div>
+          <div class="track">${hourMarks.join('')}${segs}</div>
+          <div class="track-scale"><span>${String(DAY_START).padStart(2,'0')}:00</span><span>${String(DAY_END).padStart(2,'0')}:00</span></div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function renderHistory(){
+    if(!isAdmin) return;
+    const dateInput = $('inpHistoryDate');
+    if(!dateInput.value) dateInput.value = todayStr();
+    const d = dateInput.value;
+    const tbody = $('historyTbody');
+    let list = [];
+    try{
+      const { ok, body } = await api(`/api/admin/history?date=${encodeURIComponent(d)}&password=${encodeURIComponent(adminPassword||'')}`);
+      if(ok && body){
+        list = (body.bookings || []).sort((a,b)=>a.start.localeCompare(b.start));
+      } else if(body && body.error === 'WRONG_PASSWORD'){
+        forceAdminLogout();
+        return;
+      }
+    }catch(e){ /* network error: show empty */ }
+    if(!list.length){
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="4">${t('noHistory')}</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(b=>`
+      <tr>
+        <td>${escapeHtml(b.requester)}</td>
+        <td>${escapeHtml(b.driver)}</td>
+        <td><span class="plate-chip">${escapeHtml(b.plate)}</span></td>
+        <td class="time-chip">${b.start}–${b.end}</td>
+      </tr>
+    `).join('');
+  }
+
+  function forceAdminLogout(){
+    isAdmin = false;
+    adminPassword = null;
+    $('adminPanel').style.display='none';
+    $('adminBadgeWrap').style.display='none';
+    applyStaticText();
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  // ---------- event handlers ----------
+  async function onSubmitBooking(e){
+    e.preventDefault();
+    const requester = $('inpRequester').value.trim();
+    const driver = $('inpDriver').value.trim();
+    const plate = $('inpCar').value;
+    const date = $('inpDate').value;
+    const start = $('inpStart').value;
+    const end = $('inpEnd').value;
+
+    if(!requester) return showMsg('bookMsg', t('errRequesterRequired'), 'err');
+    if(!driver) return showMsg('bookMsg', t('errDriverRequired'), 'err');
+    if(!plate) return showMsg('bookMsg', t('errCarRequired'), 'err');
+    if(!date) return showMsg('bookMsg', t('errDateRequired'), 'err');
+    if(!start || !end) return showMsg('bookMsg', t('errTimeRequired'), 'err');
+    if(end <= start) return showMsg('bookMsg', t('errTimeInvalid'), 'err');
+
+    let result;
+    try{
+      result = await api('/api/bookings/add', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ requester, driver, plate, date, start, end })
+      });
+    }catch(e){
+      return showMsg('bookMsg', t('errNetwork'), 'err');
+    }
+
+    if(!result.ok){
+      const err = result.body && result.body.error;
+      const conflict = result.body && result.body.conflict;
+      if(err === 'CAR_CONFLICT' && conflict){
+        return showMsg('bookMsg', t('errCarConflict')(plate, conflict.driver, conflict.start, conflict.end), 'err');
+      }
+      if(err === 'DRIVER_CONFLICT' && conflict){
+        return showMsg('bookMsg', t('errDriverConflict')(driver, conflict.plate, conflict.start, conflict.end), 'err');
+      }
+      const map = {
+        REQUESTER_REQUIRED:'errRequesterRequired', DRIVER_REQUIRED:'errDriverRequired',
+        CAR_REQUIRED:'errCarRequired', DATE_INVALID:'errDateRequired', TIME_REQUIRED:'errTimeRequired',
+        TIME_RANGE_INVALID:'errTimeInvalid', CAR_NOT_FOUND:'errCarRequired', DRIVER_NOT_FOUND:'errDriverRequired',
+      };
+      return showMsg('bookMsg', map[err] ? t(map[err]) : t('errNetwork'), 'err');
+    }
+
+    await loadAll();
+    showMsg('bookMsg', t('successBooked'), 'ok');
+    $('bookingForm').reset();
+    $('inpDate').value = todayStr();
+    populateCarSelect();
+    populateDriverSelect();
+    renderBookings();
+    renderTimeline();
+  }
+
+  async function onAddCar(e){
+    e.preventDefault();
+    const plate = $('inpPlate').value.trim();
+    const note = $('inpCarNote').value.trim();
+    if(!plate) return showMsg('adminMsg', t('errPlateRequired'), 'err');
+    const { ok, status, body } = await api('/api/cars/add', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ plate, note, password: adminPassword })
+    });
+    if(status === 401) return forceAdminLogout();
+    if(!ok){
+      const err = body && body.error;
+      return showMsg('adminMsg', err==='PLATE_DUPLICATE' ? t('errPlateDuplicate') : t('errPlateRequired'), 'err');
+    }
+    await loadAll();
+    showMsg('adminMsg', t('successCarAdded'), 'ok');
+    $('addCarForm').reset();
+    populateCarSelect();
+    renderCarList();
+    renderTimeline();
+  }
+
+  async function onRemoveCar(e){
+    const plate = e.currentTarget.getAttribute('data-remove-plate');
+    if(!confirm(t('confirmRemoveCar')(plate))) return;
+    const { ok, status } = await api('/api/cars/remove', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ plate, password: adminPassword })
+    });
+    if(status === 401) return forceAdminLogout();
+    if(!ok) return showMsg('adminMsg', t('errNetwork'), 'err');
+    await loadAll();
+    showMsg('adminMsg', t('successCarRemoved'), 'ok');
+    populateCarSelect();
+    renderCarList();
+    renderTimeline();
+  }
+
+  async function onAddDriver(e){
+    e.preventDefault();
+    const name = $('inpDriverName').value.trim();
+    const note = $('inpDriverNote').value.trim();
+    if(!name) return showMsg('adminMsg', t('errDriverNameRequired'), 'err');
+    const { ok, status, body } = await api('/api/drivers/add', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name, note, password: adminPassword })
+    });
+    if(status === 401) return forceAdminLogout();
+    if(!ok){
+      const err = body && body.error;
+      return showMsg('adminMsg', err==='NAME_DUPLICATE' ? t('errDriverDuplicate') : t('errDriverNameRequired'), 'err');
+    }
+    await loadAll();
+    showMsg('adminMsg', t('successDriverAdded'), 'ok');
+    $('addDriverForm').reset();
+    populateDriverSelect();
+    renderDriverList();
+  }
+
+  async function onRemoveDriver(e){
+    const name = e.currentTarget.getAttribute('data-remove-driver');
+    if(!confirm(t('confirmRemoveDriver')(name))) return;
+    const { ok, status } = await api('/api/drivers/remove', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name, password: adminPassword })
+    });
+    if(status === 401) return forceAdminLogout();
+    if(!ok) return showMsg('adminMsg', t('errNetwork'), 'err');
+    await loadAll();
+    showMsg('adminMsg', t('successDriverRemoved'), 'ok');
+    populateDriverSelect();
+    renderDriverList();
+  }
+
+  function openCancelModal(id){
+    pendingCancelId = id;
+    const b = bookings.find(x=>x.id===id);
+    if(!b) return;
+    $('t-confirmCancelBody').textContent = t('confirmCancelBody')(b.requester, b.plate, b.start, b.end);
+    $('cancelOverlay').classList.add('show');
+  }
+
+  async function onEndDay(){
+    const { ok, status, body } = await api('/api/admin/end-day', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password: adminPassword })
+    });
+    if(status === 401) return forceAdminLogout();
+    if(!ok) return showMsg('adminMsg', t('errNetwork'), 'err');
+    await loadAll();
+    showMsg('adminMsg', t('successEndDay') + ` (${body.count||0})`, 'ok');
+    renderBookings();
+    renderTimeline();
+    renderHistory();
+  }
+
+  // ---------- init ----------
+  async function init(){
+    $('inpDate').value = todayStr();
+    $('inpHistoryDate').value = todayStr();
+    await loadAll();
+    applyStaticText();
+
+    $('bookingForm').addEventListener('submit', onSubmitBooking);
+    $('addCarForm').addEventListener('submit', onAddCar);
+    $('addDriverForm').addEventListener('submit', onAddDriver);
+    $('btnEndDay').addEventListener('click', onEndDay);
+    $('inpHistoryDate').addEventListener('change', renderHistory);
+
+    $('btnLang').addEventListener('click', ()=>{
+      lang = lang==='th' ? 'zh' : 'th';
+      applyStaticText();
+    });
+
+    $('btnAdminToggle').addEventListener('click', ()=>{
+      if(isAdmin){
+        forceAdminLogout();
+      } else {
+        $('inpPassword').value='';
+        $('loginErr').className='msg';
+        $('loginOverlay').classList.add('show');
+      }
+    });
+    $('btnCancelLogin').addEventListener('click', ()=> $('loginOverlay').classList.remove('show'));
+    $('btnDoLogin').addEventListener('click', async ()=>{
+      const pw = $('inpPassword').value;
+      $('btnDoLogin').disabled = true;
+      const { ok } = await api('/api/admin/login', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ password: pw })
+      });
+      $('btnDoLogin').disabled = false;
+      if(ok){
+        isAdmin = true;
+        adminPassword = pw;
+        $('loginOverlay').classList.remove('show');
+        $('adminPanel').style.display='';
+        $('adminBadgeWrap').style.display='';
+        applyStaticText();
+      } else {
+        $('loginErr').textContent = t('wrongPassword');
+        $('loginErr').className = 'msg show err';
+      }
+    });
+    $('inpPassword').addEventListener('keydown', e=>{ if(e.key==='Enter') $('btnDoLogin').click(); });
+
+    $('btnNoCancel').addEventListener('click', ()=>{ $('cancelOverlay').classList.remove('show'); pendingCancelId=null; });
+    $('btnYesCancel').addEventListener('click', async ()=>{
+      if(!pendingCancelId) return;
+      const { ok, status } = await api('/api/bookings/cancel', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ id: pendingCancelId, password: adminPassword })
+      });
+      pendingCancelId = null;
+      $('cancelOverlay').classList.remove('show');
+      if(status === 401) return forceAdminLogout();
+      if(!ok) return showMsg('adminMsg', t('errNetwork'), 'err');
+      await loadAll();
+      showMsg('adminMsg', t('successCancelled'), 'ok');
+      renderBookings();
+      renderTimeline();
+    });
+
+    // periodic refresh so all users see new bookings without reloading
+    setInterval(async ()=>{
+      await loadAll();
+      populateCarSelect();
+      populateDriverSelect();
+      renderCarList();
+      renderDriverList();
+      renderBookings();
+      renderTimeline();
+      if(isAdmin) renderHistory();
+    }, 6000);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
