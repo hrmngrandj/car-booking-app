@@ -1,0 +1,13 @@
+{
+  "name": "car-booking-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ระบบจองรถ / 用车预订系统 — self-contained booking website (Node.js, no external dependencies)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
